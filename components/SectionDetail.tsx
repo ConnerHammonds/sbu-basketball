@@ -24,25 +24,23 @@ interface Seat {
 }
 
 export default function SectionDetail({ section, onBack }: SectionDetailProps) {
-  // Generate seats for the section
+  // Generate seats based on section shape
   const generateSeats = (): Seat[] => {
     const seats: Seat[] = [];
-    const rows = section.height > section.width ? 12 : 8;
-    const seatsPerRow = section.height > section.width ? 8 : 12;
-    
+    const isVertical = section.height > section.width;
+    const rows = isVertical ? 16 : 8;
+    const seatsPerRow = isVertical ? 8 : 16;
+
     for (let row = 1; row <= rows; row++) {
       for (let seat = 1; seat <= seatsPerRow; seat++) {
         const rand = Math.random();
-        let status: 'available' | 'reserved' | 'selected' | 'sold';
-        if (rand > 0.85) {
-          status = 'sold'; // unavailable
-        } else if (rand > 0.7) {
-          status = 'reserved';
-        } else {
-          status = 'available';
-        }
+        let status: Seat['status'];
+        if (rand > 0.85) status = 'sold';
+        else if (rand > 0.7) status = 'reserved';
+        else status = 'available';
+
         seats.push({
-          id: `${section.id}-R${row}-S${seat}`,
+          id: `section-${section.id}-R${row}-S${seat}`,
           row,
           seat,
           status,
@@ -78,7 +76,7 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
   const getSeatColor = (status: string) => {
     switch (status) {
       case 'available':
-        return '#d9d9d9'; // light gray/white
+        return '#d9d9d9'; // light gray
       case 'reserved':
         return '#fbbf24'; // yellow
       case 'selected':
@@ -86,49 +84,39 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
       case 'sold':
         return '#ef4444'; // red
       default:
-        return '#d9d9d9'; // light gray/white
+        return '#d9d9d9';
     }
   };
 
-  const rows = section.height > section.width ? 12 : 8;
-  const seatsPerRow = section.height > section.width ? 8 : 12;
+  const isVertical = section.height > section.width;
+  const rows = isVertical ? 16 : 8;
+  const seatsPerRow = isVertical ? 8 : 16;
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
+      {/* Back Button */}
       <div className="mb-6">
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-purple-700 hover:text-purple-900 font-semibold transition-colors"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
+          <span className="text-lg">←</span>
           Back to Seating Chart
         </button>
       </div>
 
+      {/* Seating Section */}
       <div className="mb-8">
-        {/* Purple seating area container */}
         <div className="bg-gradient-to-b from-purple-700 to-purple-800 rounded-2xl p-8 shadow-2xl">
-          {/* Title */}
           <h2 className="text-3xl font-bold text-white text-center mb-6">
             Select Your Seats
           </h2>
 
-          {/* Seating grid */}
+          {/* Seat grid */}
           <div className="flex justify-center">
-            <div className="inline-block bg-purple-600 rounded-xl p-6">
+            <div className="inline-block bg-purple-600 rounded-xl p-8">
               {Array.from({ length: rows }, (_, rowIndex) => (
-                <div key={rowIndex} className="flex items-center gap-1 mb-1">
+                <div key={`row-${rowIndex}`} className="flex items-center gap-1 mb-1">
                   <div className="flex gap-1">
                     {Array.from({ length: seatsPerRow }, (_, seatIndex) => {
                       const seat = seats.find(
@@ -136,13 +124,13 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
                       );
                       const isAvailable = seat?.status === 'available';
                       const textColor = isAvailable ? '#1f2937' : '#ffffff';
-                      
+
                       return (
                         <button
-                          key={seatIndex}
+                          key={`seat-${rowIndex}-${seatIndex}`}
                           onClick={() => seat && handleSeatClick(seat.id)}
                           disabled={seat?.status === 'sold' || seat?.status === 'reserved'}
-                          className={`w-7 h-7 rounded transition-all duration-200 ${
+                          className={`w-9 h-9 rounded transition-all duration-200 ${
                             seat?.status === 'sold' || seat?.status === 'reserved'
                               ? 'cursor-not-allowed'
                               : 'cursor-pointer hover:scale-110 hover:shadow-lg'
@@ -166,6 +154,7 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
         </div>
       </div>
 
+      {/* Legend and Selected Seats */}
       <div className="border-t pt-6">
         <div className="flex justify-center gap-6 mb-6 flex-wrap">
           <div className="flex items-center gap-2">
@@ -204,8 +193,8 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
                 );
               })}
             </div>
-            <button className="mt-4 w-full bg-purple-700 hover:bg-purple-800 text-white font-semibold py-3 rounded-lg transition-colors">
-              Continue to Checkout
+            <button className="mt-4 w-full bg-purple-700 hover:bg-purple-800 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+              ✅ Confirm Selection
             </button>
           </div>
         )}
