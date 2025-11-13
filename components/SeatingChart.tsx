@@ -161,7 +161,7 @@ export default function SeatingChart() {
                 x={section.x}
                 y={section.y + section.height}
                 width={section.width}
-                height="12"
+                height="16"
                 fill="#6b7280"
               />
             )}
@@ -170,7 +170,7 @@ export default function SeatingChart() {
                 x={section.x}
                 y={section.y + section.height}
                 width={section.width}
-                height="12"
+                height="16"
                 fill="#6b7280"
               />
             )}
