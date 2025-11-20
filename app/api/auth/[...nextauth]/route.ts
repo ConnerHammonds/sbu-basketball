@@ -1,8 +1,11 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { prisma } from "../../../lib/prisma";
 import bcrypt from "bcryptjs";
 
 export const authOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -14,24 +17,13 @@ export const authOptions = {
         if (!credentials) return null;
         const { email, password } = credentials;
 
-        const adminEmail = process.env.ADMIN_EMAIL;
-        const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
-        const adminPasswordPlain = process.env.ADMIN_PASSWORD; // fallback for quick dev
+        // Check user in database
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) return null;
 
-        if (!adminEmail) return null;
-
-        // If a hashed password is provided, verify with bcrypt
-        if (adminPasswordHash) {
-          const match = await bcrypt.compare(password || "", adminPasswordHash);
-          if (email === adminEmail && match) {
-            return { id: "1", name: "Admin", email: adminEmail, role: "admin" };
-          }
-          return null;
-        }
-
-        // Fallback: plaintext env var (dev only)
-        if (adminPasswordPlain && email === adminEmail && password === adminPasswordPlain) {
-          return { id: "1", name: "Admin", email: adminEmail, role: "admin" };
+        const match = await bcrypt.compare(password || "", user.password);
+        if (match) {
+          return { id: user.id, name: user.name || 'Admin', email: user.email, role: user.role };
         }
 
         return null;

@@ -44,3 +44,5 @@ next-env.d.ts
 database/*.db
 database/*.db-shm
 database/*.db-wal
+
+/lib/generated/prisma
