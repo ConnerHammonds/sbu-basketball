@@ -1,8 +1,6 @@
 'use client';
 
-
-import { useState } from 'react';
-
+import React, { useState, useEffect } from "react";
 
 interface Section {
   id: string;
@@ -13,12 +11,10 @@ interface Section {
   height: number;
 }
 
-
 interface SectionDetailProps {
   section: Section;
   onBack: () => void;
 }
-
 
 interface Seat {
   id: string;
@@ -27,88 +23,102 @@ interface Seat {
   status: 'available' | 'reserved' | 'selected' | 'sold';
 }
 
-
 export default function SectionDetail({ section, onBack }: SectionDetailProps) {
-  // Generate seats based on section shape
-  const generateSeats = (): Seat[] => {
-    const seats: Seat[] = [];
-    const isVertical = section.height > section.width;
-    const rows = isVertical ? 16 : 8;
-    const seatsPerRow = isVertical ? 8 : 16;
-
-
-    for (let row = 1; row <= rows; row++) {
-      for (let seat = 1; seat <= seatsPerRow; seat++) {
-        const rand = Math.random();
-        let status: Seat['status'];
-        if (rand > 0.85) status = 'sold';
-        else if (rand > 0.7) status = 'reserved';
-        else status = 'available';
-
-
-        seats.push({
-          id: `section-${section.id}-R${row}-S${seat}`,
-          row,
-          seat,
-          status,
-        });
-      }
-    }
-    return seats;
-  };
-
-
-  const [seats, setSeats] = useState<Seat[]>(() => generateSeats());
+  const [seats, setSeats] = useState<Seat[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
 
+  useEffect(() => {
+    const loadSeats = async () => {
+      const res = await fetch(`/api/seats/by-section?section=${section.id}`);
+      const data = await res.json();
+
+      setSeats(
+        data.seats.map((s: any) => ({
+          id: s.id,
+          row: s.row_number,
+          seat: s.seat_number,
+          status: s.status
+        }))
+      );
+    };
+
+    loadSeats();
+  }, [section.id]);
 
   const handleSeatClick = (seatId: string) => {
-     const seat = seats.find((s) => s.id === seatId);
+    const seat = seats.find((s) => s.id === seatId);
     if (!seat || seat.status === 'sold' || seat.status === 'reserved') return;
+
     const newStatus = seat.status === 'available' ? 'selected' : 'available';
+
     setSeats((prevSeats) =>
-      prevSeats.map((s) => (s.id === seatId ? { ...s, status: newStatus } : s))
+      prevSeats.map((s) =>
+        s.id === seatId ? { ...s, status: newStatus } : s
+      )
     );
+
     setSelectedSeats((prev) =>
-      newStatus === 'selected' ? (prev.includes(seatId) ? prev : [...prev, seatId]) : prev.filter((id) => id !== seatId)
+      newStatus === 'selected'
+        ? prev.includes(seatId) ? prev : [...prev, seatId]
+        : prev.filter((id) => id !== seatId)
     );
   };
-
 
   const getSeatColor = (status: string) => {
     switch (status) {
       case 'available':
-        return '#d9d9d9'; // light gray
+        return '#d9d9d9';
       case 'reserved':
-        return '#fbbf24'; // yellow
+        return '#fbbf24';
       case 'selected':
-        return '#10b981'; // green
+        return '#10b981';
       case 'sold':
-        return '#ef4444'; // red
+        return '#ef4444';
       default:
         return '#d9d9d9';
     }
   };
-  //confirm seats, mark yellow
-  const handleConfirmSelection = () => {
-    if(selectedSeats.length === 0) return;
-    setSeats((prevSeats) =>
-      prevSeats.map((s) => {
-        if (selectedSeats.includes(s.id)) {
-          return { ...s, status: 'reserved' };
-        }
-        return s;
-      })
-    );
-    setSelectedSeats([]); // Clear selected seats after confirming
-  };
 
+  const handleConfirmSelection = async () => {
+    if (selectedSeats.length === 0) return;
+
+    const seatsToReserve = seats.filter(s => selectedSeats.includes(s.id));
+
+    await fetch("/api/seats/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sectionId: section.id,
+        userId: 1,
+        seats: seatsToReserve.map(s => ({
+          row_number: s.row,
+          seat_number: s.seat
+        }))
+      }),
+    });
+
+    const res = await fetch(`/api/seats/by-section?section=${section.id}`);
+    const data = await res.json();
+
+    setSeats(
+      data.seats.map((s: any) => ({
+        id: s.id,
+        row: s.row_number,
+        seat: s.seat_number,
+        status: s.status
+      }))
+    );
+
+    setSelectedSeats([]);
+  };
 
   const isVertical = section.height > section.width;
   const rows = isVertical ? 16 : 8;
   const seatsPerRow = isVertical ? 8 : 16;
 
-
+  // ----------------------------
+  //           RETURN UI
+  // ----------------------------
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
       {/* Back Button */}
@@ -122,14 +132,12 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
         </button>
       </div>
 
-
       {/* Seating Section */}
       <div className="mb-8">
         <div className="bg-gradient-to-b from-purple-700 to-purple-800 rounded-2xl p-8 shadow-2xl">
           <h2 className="text-3xl font-bold text-white text-center mb-6">
             Select Your Seats
           </h2>
-
 
           {/* Seat grid */}
           <div className="flex justify-center">
@@ -143,7 +151,6 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
                       );
                       const isAvailable = seat?.status === 'available';
                       const textColor = isAvailable ? '#1f2937' : '#ffffff';
-
 
                       return (
                         <button
@@ -174,8 +181,7 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
         </div>
       </div>
 
-
-      {/* Legend and Selected Seats */}
+      {/* Legend + Selected */}
       <div className="border-t pt-6">
         <div className="flex justify-center gap-6 mb-6 flex-wrap">
           <div className="flex items-center gap-2">
@@ -196,14 +202,14 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
           </div>
         </div>
 
-
         {selectedSeats.length > 0 && (
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
             <h3 className="font-semibold text-purple-900 mb-2">
               Selected Seats ({selectedSeats.length})
             </h3>
+
             <div className="flex flex-wrap gap-2">
-               {selectedSeats.map((seatId, idx) => {
+              {selectedSeats.map((seatId, idx) => {
                 const seat = seats.find((s) => s.id === seatId);
                 return (
                   <span
@@ -215,16 +221,17 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
                 );
               })}
             </div>
-             <button
-              onClick={() => handleConfirmSelection()}
+
+            <button
+              onClick={handleConfirmSelection}
               disabled={selectedSeats.length === 0}
               className={`mt-4 w-full text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
                 selectedSeats.length === 0
-                 ? 'bg-purple-300 cursor-not-allowed'
+                  ? 'bg-purple-300 cursor-not-allowed'
                   : 'bg-purple-700 hover:bg-purple-800'
               }`}
             >
-             ✅ Confirm Selection
+              ✅ Confirm Selection
             </button>
           </div>
         )}
@@ -232,4 +239,3 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
     </div>
   );
 }
-
