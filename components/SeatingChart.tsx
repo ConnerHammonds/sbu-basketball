@@ -33,7 +33,11 @@ const sections: Section[] = [
   { id: 'D3', name: 'D3', x: 648, y: 628, width: 172, height: 94 },
 ];
 
-export default function SeatingChart() {
+interface SeatingChartProps {
+  isAdminMode?: boolean;
+}
+
+export default function SeatingChart({ isAdminMode = false }: SeatingChartProps) {
   const [selectedSection, setSelectedSection] = useState<Section | null>(null);
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
 
@@ -46,7 +50,7 @@ export default function SeatingChart() {
   };
 
   if (selectedSection) {
-    return <SectionDetail section={selectedSection} onBack={handleBackToChart} />;
+    return <SectionDetail section={selectedSection} onBack={handleBackToChart} isAdminMode={isAdminMode} />;
   }
 
   return (

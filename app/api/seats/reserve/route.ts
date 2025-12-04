@@ -3,14 +3,13 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { seatIds } = body;
+    const { seatIds } = await req.json();
 
     if (!seatIds || !Array.isArray(seatIds)) {
-      return NextResponse.json({ error: "Missing seat IDs" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid seat IDs" }, { status: 400 });
     }
 
-    // Update all seats to reserved status
+    // Update all selected seats to reserved status
     await prisma.seat.updateMany({
       where: {
         id: { in: seatIds }

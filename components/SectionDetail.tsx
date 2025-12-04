@@ -14,18 +14,19 @@ interface Section {
 interface SectionDetailProps {
   section: Section;
   onBack: () => void;
+  isAdminMode?: boolean;
 }
 
 interface Seat {
-  id: string;
+  id: number;
   row: number;
   seat: number;
   status: 'available' | 'reserved' | 'selected' | 'sold';
 }
 
-export default function SectionDetail({ section, onBack }: SectionDetailProps) {
+export default function SectionDetail({ section, onBack, isAdminMode = false }: SectionDetailProps) {
   const [seats, setSeats] = useState<Seat[]>([]);
-  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
 
   useEffect(() => {
     const loadSeats = async () => {
@@ -45,7 +46,23 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
     loadSeats();
   }, [section.id]);
 
-  const handleSeatClick = (seatId: string) => {
+  const handleAdminStatusChange = async (seatId: number, newStatus: string) => {
+    await fetch("/api/seats/update-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ seatId, status: newStatus }),
+    });
+
+    setSeats((prevSeats) =>
+      prevSeats.map((s) =>
+        s.id === seatId ? { ...s, status: newStatus as any } : s
+      )
+    );
+  };
+
+  const handleSeatClick = (seatId: number) => {
+    if (isAdminMode) return; // In admin mode, use dropdown instead
+    
     const seat = seats.find((s) => s.id === seatId);
     if (!seat || seat.status === 'sold' || seat.status === 'reserved') return;
 
@@ -82,31 +99,20 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
   const handleConfirmSelection = async () => {
     if (selectedSeats.length === 0) return;
 
-    const seatsToReserve = seats.filter(s => selectedSeats.includes(s.id));
-
-    await fetch("/api/seats/update", {
+    // Update seats to reserved status in the database
+    await fetch("/api/seats/reserve", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        sectionId: section.id,
-        userId: 1,
-        seats: seatsToReserve.map(s => ({
-          row_number: s.row,
-          seat_number: s.seat
-        }))
+        seatIds: selectedSeats
       }),
     });
 
-    const res = await fetch(`/api/seats/by-section?section=${section.id}`);
-    const data = await res.json();
-
-    setSeats(
-      data.seats.map((s: any) => ({
-        id: s.id,
-        row: s.row_number,
-        seat: s.seat_number,
-        status: s.status
-      }))
+    // Update local state to show seats as reserved (yellow)
+    setSeats((prevSeats) =>
+      prevSeats.map((s) =>
+        selectedSeats.includes(s.id) ? { ...s, status: 'reserved' } : s
+      )
     );
 
     setSelectedSeats([]);
@@ -141,16 +147,44 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
 
           {/* Seat grid */}
           <div className="flex justify-center">
-            <div className="inline-block bg-purple-600 rounded-xl p-8">
+            <div className="inline-block bg-purple-600 rounded-xl p-8 relative">
               {Array.from({ length: rows }, (_, rowIndex) => (
-                <div key={`row-${section.id}-${rowIndex}`} className="flex items-center gap-1 mb-1">
-                  <div className="flex gap-1">
+                <div key={`row-${section.id}-${rowIndex}`} className="flex items-center gap-1 mb-1 relative z-0">
+                  <div className="flex gap-1 relative">
                     {Array.from({ length: seatsPerRow }, (_, seatIndex) => {
                       const seat = seats.find(
                         (s) => s.row === rowIndex + 1 && s.seat === seatIndex + 1
                       );
                       const isAvailable = seat?.status === 'available';
                       const textColor = isAvailable ? '#1f2937' : '#ffffff';
+
+                      if (isAdminMode && seat) {
+                        return (
+                          <div key={`seat-${section.id}-${rowIndex}-${seatIndex}`} className="relative group hover:z-[9999]">
+                            <button
+                              className="w-9 h-9 rounded"
+                              style={{
+                                backgroundColor: getSeatColor(seat.status),
+                              }}
+                              title={`Row ${String.fromCharCode(65 + rowIndex)}, Seat ${seatIndex + 1}`}
+                            >
+                              <span className="text-[10px] font-bold" style={{ color: textColor }}>
+                                {seatIndex + 1}
+                              </span>
+                            </button>
+                            <select
+                              value={seat.status}
+                              onChange={(e) => handleAdminStatusChange(seat.id, e.target.value)}
+                              className="absolute top-0 left-0 w-28 h-10 opacity-0 group-hover:opacity-100 cursor-pointer text-sm bg-white border-2 border-purple-500 rounded shadow-2xl"
+                              title="Change status"
+                            >
+                              <option value="available">Available</option>
+                              <option value="reserved">Reserved</option>
+                              <option value="sold">Sold</option>
+                            </select>
+                          </div>
+                        );
+                      }
 
                       return (
                         <button
@@ -202,7 +236,7 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
           </div>
         </div>
 
-        {selectedSeats.length > 0 && (
+        {!isAdminMode && selectedSeats.length > 0 && (
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
             <h3 className="font-semibold text-purple-900 mb-2">
               Selected Seats ({selectedSeats.length})

@@ -9,7 +9,9 @@ let db: Database;
 
 // Initialize database
 export async function initDb() {
-  const SQL = await initSqlJs();
+  const SQL = await initSqlJs({
+    locateFile: (file) => `https://sql.js.org/dist/${file}`
+  });
   
   // Create database directory if it doesn't exist
   const dbDir = path.dirname(dbPath);

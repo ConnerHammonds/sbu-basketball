@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import db from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -8,10 +8,21 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Section ID required" }, { status: 400 });
   }
 
-  const seats = await db.seats.findMany({
-    where: { section_id: sectionId },
-    orderBy: [{ row_number: "asc" }, { seat_number: "asc" }]
+  const seats = await prisma.seat.findMany({
+    where: { sectionId },
+    orderBy: [
+      { rowNumber: 'asc' },
+      { seatNumber: 'asc' }
+    ]
   });
 
-  return NextResponse.json({ seats });
+  return NextResponse.json({ 
+    seats: seats.map((s) => ({
+      id: s.id,
+      section_id: s.sectionId,
+      row_number: s.rowNumber,
+      seat_number: s.seatNumber,
+      status: s.status
+    }))
+  });
 }

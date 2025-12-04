@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db"; // update this import based on your setup
+import { prisma } from "@/lib/prisma";
 
 // GET → fetch seats for a section
 export async function GET(req: Request) {
@@ -10,9 +10,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Missing section" }, { status: 400 });
   }
 
-  const seats = await db.seats.findMany({
-    where: { section_id: sectionId },
-    orderBy: [{ row_number: "asc" }, { seat_number: "asc" }],
+  const seats = await prisma.seat.findMany({
+    where: { sectionId },
+    orderBy: [{ rowNumber: "asc" }, { seatNumber: "asc" }],
   });
 
   return NextResponse.json({ seats });
@@ -21,30 +21,20 @@ export async function GET(req: Request) {
 // POST → reserve seats
 export async function POST(req: Request) {
   try {
-    const { userId, seats } = await req.json();
+    const { seatIds } = await req.json();
 
-    if (!userId || !Array.isArray(seats)) {
+    if (!Array.isArray(seatIds)) {
       return NextResponse.json(
         { error: "Invalid body" },
         { status: 400 }
       );
     }
 
-    // For each seat, create reservation + update seat status
-    for (const seatId of seats) {
-      await db.reservations.create({
-        data: {
-          user_id: userId,
-          seat_id: seatId,
-          status: "confirmed",
-        },
-      });
-
-      await db.seats.update({
-        where: { id: seatId },
-        data: { status: "reserved" },
-      });
-    }
+    // Update all seats to reserved status
+    await prisma.seat.updateMany({
+      where: { id: { in: seatIds } },
+      data: { status: "reserved" },
+    });
 
     return NextResponse.json({ success: true });
   } catch (err) {
