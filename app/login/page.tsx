@@ -38,18 +38,15 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100 flex items-center justify-center p-8">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
+    <main className="min-h-screen flex items-center justify-center p-8" style={{ backgroundColor: '#492779' }}>
+      <div className="w-full max-w-xs">
+        <h1 className="text-4xl font-bold text-center text-white mb-8">
           Admin Login
         </h1>
-        <p className="text-center text-gray-600 mb-8">
-          Sign in to manage seats
-        </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="username" className="block text-sm font-medium text-white mb-2">
               Username
             </label>
             <input
@@ -57,14 +54,14 @@ export default function LoginPage() {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="Enter your username"
+              className="w-full px-6 py-4 border-none rounded-lg focus:ring-2 focus:ring-white focus:outline-none text-gray-800"
+              placeholder="Username"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
               Password
             </label>
             <input
@@ -72,14 +69,14 @@ export default function LoginPage() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="Enter your password"
+              className="w-full px-6 py-4 border-none rounded-lg focus:ring-2 focus:ring-white focus:outline-none text-gray-800"
+              placeholder="Password"
               required
             />
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="bg-red-500 text-white px-4 py-3 rounded-lg text-center">
               {error}
             </div>
           )}
@@ -87,10 +84,10 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
+            className={`w-full py-4 px-4 rounded-lg font-semibold text-white transition-colors ${
               isLoading
                 ? 'bg-purple-400 cursor-not-allowed'
-                : 'bg-purple-700 hover:bg-purple-800'
+                : 'bg-white/20 hover:bg-white/30'
             }`}
           >
             {isLoading ? 'Signing in...' : 'Sign In'}
@@ -100,7 +97,7 @@ export default function LoginPage() {
         <div className="mt-6 text-center">
           <button
             onClick={() => router.push('/')}
-            className="text-purple-700 hover:text-purple-900 font-medium"
+            className="text-white hover:text-white/80 font-medium"
           >
             ← Back to Seating Chart
           </button>
