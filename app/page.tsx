@@ -2,6 +2,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import SeatingChart from '@/components/SeatingChart';
+import Button from '@/components/Button';
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -18,12 +19,13 @@ export default function Home() {
         )}
         {!isAdminMode && (
           <div className="flex justify-end mb-4">
-            <button
+            <Button
               onClick={() => router.push('/login')}
-              className="bg-purple-700 hover:bg-purple-800 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+              variant="primary"
+              size="md"
             >
               Admin Login
-            </button>
+            </Button>
           </div>
         )}
         <h1 className="text-4xl font-bold text-center mb-2 text-gray-800">

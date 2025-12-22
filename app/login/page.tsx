@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Button from '@/components/Button';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -81,26 +82,26 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button
+          <Button
             type="submit"
-            disabled={isLoading}
-            className={`w-full py-4 px-4 rounded-lg font-semibold text-white transition-colors ${
-              isLoading
-                ? 'bg-purple-400 cursor-not-allowed'
-                : 'bg-white/20 hover:bg-white/30'
-            }`}
+            variant="outline"
+            size="lg"
+            fullWidth
+            isLoading={isLoading}
+            className="!text-white !border-white hover:!bg-white/20 focus:!ring-white"
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
-          </button>
+            Sign In
+          </Button>
         </form>
 
         <div className="mt-6 text-center">
-          <button
+          <Button
             onClick={() => router.push('/')}
-            className="text-white hover:text-white/80 font-medium"
+            variant="ghost"
+            className="!text-white hover:!bg-white/10"
           >
             ← Back to Seating Chart
-          </button>
+          </Button>
         </div>
       </div>
     </main>
