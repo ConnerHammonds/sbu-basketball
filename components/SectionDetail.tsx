@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
+import Button from "./Button";
 
 interface Section {
   id: string;
@@ -129,13 +130,14 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
     <div className="bg-white rounded-lg shadow-lg p-8">
       {/* Back Button */}
       <div className="mb-6">
-        <button
+        <Button
           onClick={onBack}
-          className="flex items-center gap-2 text-purple-700 hover:text-purple-900 font-semibold transition-colors"
+          variant="ghost"
+          size="md"
         >
           <span className="text-lg">←</span>
           Back to Seating Chart
-        </button>
+        </Button>
       </div>
 
       {/* Seating Section */}
@@ -256,17 +258,16 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
               })}
             </div>
 
-            <button
+            <Button
               onClick={handleConfirmSelection}
               disabled={selectedSeats.length === 0}
-              className={`mt-4 w-full text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                selectedSeats.length === 0
-                  ? 'bg-purple-300 cursor-not-allowed'
-                  : 'bg-purple-700 hover:bg-purple-800'
-              }`}
+              variant="primary"
+              size="lg"
+              fullWidth
+              className="mt-4"
             >
               ✅ Confirm Selection
-            </button>
+            </Button>
           </div>
         )}
       </div>
