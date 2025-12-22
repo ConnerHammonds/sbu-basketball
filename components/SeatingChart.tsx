@@ -15,25 +15,29 @@ interface Section {
 
 const sections: Section[] = [
   // Top sections
-  { id: 'A1', name: 'A1', x: 264, y: 146, width: 172, height: 94 },
-  { id: 'A2', name: 'A2', x: 456, y: 146, width: 172, height: 94 },
-  { id: 'A3', name: 'A3', x: 648, y: 146, width: 172, height: 94 },
+  { id: 'A1', name: 'A1', x: 280, y: 100, width: 160, height: 120 },
+  { id: 'A2', name: 'A2', x: 460, y: 100, width: 160, height: 120 },
+  { id: 'A3', name: 'A3', x: 640, y: 100, width: 160, height: 120 },
   
   // Left sections
-  { id: 'B1', name: 'B1', x: 154, y: 256, width: 94, height: 172 },
-  { id: 'B2', name: 'B2', x: 154, y: 440, width: 94, height: 172 },
+  { id: 'B1', name: 'B1', x: 120, y: 240, width: 120, height: 144 },
+  { id: 'B2', name: 'B2', x: 120, y: 404, width: 120, height: 144 },
   
   // Right sections
-  { id: 'C1', name: 'C1', x: 834, y: 256, width: 94, height: 172 },
-  { id: 'C2', name: 'C2', x: 834, y: 440, width: 94, height: 172 },
+  { id: 'C1', name: 'C1', x: 840, y: 240, width: 120, height: 144 },
+  { id: 'C2', name: 'C2', x: 840, y: 404, width: 120, height: 144 },
   
   // Bottom sections
-  { id: 'D1', name: 'D1', x: 264, y: 628, width: 172, height: 94 },
-  { id: 'D2', name: 'D2', x: 456, y: 628, width: 172, height: 94 },
-  { id: 'D3', name: 'D3', x: 648, y: 628, width: 172, height: 94 },
+  { id: 'D1', name: 'D1', x: 280, y: 548, width: 160, height: 120 },
+  { id: 'D2', name: 'D2', x: 460, y: 548, width: 160, height: 120 },
+  { id: 'D3', name: 'D3', x: 640, y: 548, width: 160, height: 120 },
 ];
 
-export default function SeatingChart() {
+interface SeatingChartProps {
+  isAdminMode?: boolean;
+}
+
+export default function SeatingChart({ isAdminMode = false }: SeatingChartProps) {
   const [selectedSection, setSelectedSection] = useState<Section | null>(null);
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
 
@@ -46,7 +50,7 @@ export default function SeatingChart() {
   };
 
   if (selectedSection) {
-    return <SectionDetail section={selectedSection} onBack={handleBackToChart} />;
+    return <SectionDetail section={selectedSection} onBack={handleBackToChart} isAdminMode={isAdminMode} />;
   }
 
   return (
@@ -56,65 +60,136 @@ export default function SeatingChart() {
         className="w-full h-auto"
         style={{ maxHeight: '80vh' }}
       >
-        {/* Background */}
-        <rect width="1081" height="768" fill="#d1d5db" />
+        {/* Background - Arena floor */}
+        <rect width="1081" height="768" fill="#e5e7eb" />
 
         {/* Basketball Court */}
         <g>
-          {/* Court outline */}
+          {/* Wood grain pattern definition */}
+          <defs>
+            <pattern id="woodGrain" x="0" y="0" width="200" height="8" patternUnits="userSpaceOnUse">
+              <rect width="200" height="4" fill="#c89860" />
+              <rect y="4" width="200" height="4" fill="#d4a574" />
+            </pattern>
+            <linearGradient id="woodShading" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#e0b080" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#c89860" stopOpacity="0" />
+              <stop offset="100%" stopColor="#a67c52" stopOpacity="0.1" />
+            </linearGradient>
+          </defs>
+
+          {/* Court base - hardwood floor */}
           <rect
-            x="288"
-            y="290"
-            width="505"
-            height="288"
-            fill="#f5deb3"
-            stroke="#4a90e2"
-            strokeWidth="3"
+            x="260"
+            y="234"
+            width="560"
+            height="300"
+            fill="url(#woodGrain)"
+            stroke="#000"
+            strokeWidth="4"
+          />
+          <rect
+            x="260"
+            y="234"
+            width="560"
+            height="300"
+            fill="url(#woodShading)"
           />
           
+          {/* Out of bounds area */}
+          <rect x="260" y="234" width="560" height="300" fill="none" stroke="#fff" strokeWidth="3" />
+          
           {/* Center circle */}
-          <circle cx="540" cy="434" r="30" fill="none" stroke="#000" strokeWidth="2" />
-          <circle cx="540" cy="434" r="4" fill="#000" />
+          <circle cx="540" cy="384" r="36" fill="none" stroke="#492779" strokeWidth="3" />
+          <circle cx="540" cy="384" r="12" fill="none" stroke="#492779" strokeWidth="3" />
           
           {/* Center line */}
-          <line x1="540" y1="290" x2="540" y2="578" stroke="#000" strokeWidth="2" />
+          <line x1="540" y1="234" x2="540" y2="534" stroke="#000" strokeWidth="3" />
           
-          {/* Left paint area */}
-          <rect x="288" y="384" width="60" height="100" fill="#492779" />
-          <path d="M 288 434 Q 318 434 318 384 L 288 384 Z" fill="none" stroke="#fff" strokeWidth="2" />
-          <path d="M 288 434 Q 318 434 318 484 L 288 484 Z" fill="none" stroke="#fff" strokeWidth="2" />
-          <circle cx="318" cy="434" r="3" fill="#fff" />
+          {/* Left basket area */}
+          {/* Free throw lane */}
+          <rect x="260" y="324" width="95" height="120" fill="none" stroke="#492779" strokeWidth="3" />
+          <rect x="260" y="324" width="95" height="120" fill="#492779" fillOpacity="0.08" />
           
-          {/* Right paint area */}
-          <rect x="733" y="384" width="60" height="100" fill="#492779" />
-          <path d="M 793 434 Q 763 434 763 384 L 793 384 Z" fill="none" stroke="#fff" strokeWidth="2" />
-          <path d="M 793 434 Q 763 434 763 484 L 793 484 Z" fill="none" stroke="#fff" strokeWidth="2" />
-          <circle cx="763" cy="434" r="3" fill="#fff" />
+          {/* Free throw circle */}
+          <circle cx="355" cy="384" r="36" fill="none" stroke="#492779" strokeWidth="3" />
           
-          {/* Left three-point line */}
+          {/* Restricted area arc */}
           <path
-            d="M 288 320 Q 380 434 288 548"
+            d="M 260 354 Q 295 384 260 414"
             fill="none"
             stroke="#000"
             strokeWidth="2"
+            strokeDasharray="4,4"
+          />
+          
+          {/* Left three-point line */}
+          <path
+            d="M 260 254 L 308 254 Q 402 384 308 514 L 260 514"
+            fill="none"
+            stroke="#492779"
+            strokeWidth="3"
+          />
+          
+          {/* Left basket */}
+          <line x1="260" y1="374" x2="270" y2="374" stroke="#ff6b35" strokeWidth="2" />
+          <line x1="260" y1="394" x2="270" y2="394" stroke="#ff6b35" strokeWidth="2" />
+          <ellipse cx="275" cy="384" rx="8" ry="6" fill="none" stroke="#ff6b35" strokeWidth="2" />
+          
+          {/* Right basket area */}
+          {/* Free throw lane */}
+          <rect x="725" y="324" width="95" height="120" fill="none" stroke="#492779" strokeWidth="3" />
+          <rect x="725" y="324" width="95" height="120" fill="#492779" fillOpacity="0.08" />
+          
+          {/* Free throw circle */}
+          <circle cx="725" cy="384" r="36" fill="none" stroke="#492779" strokeWidth="3" />
+          
+          {/* Restricted area arc */}
+          <path
+            d="M 820 354 Q 785 384 820 414"
+            fill="none"
+            stroke="#000"
+            strokeWidth="2"
+            strokeDasharray="4,4"
           />
           
           {/* Right three-point line */}
           <path
-            d="M 793 320 Q 701 434 793 548"
+            d="M 820 254 L 772 254 Q 678 384 772 514 L 820 514"
             fill="none"
-            stroke="#000"
-            strokeWidth="2"
+            stroke="#492779"
+            strokeWidth="3"
           />
-
-          {/* Wood grain effect */}
-          <defs>
-            <pattern id="woodGrain" x="0" y="0" width="100" height="4" patternUnits="userSpaceOnUse">
-              <rect width="100" height="2" fill="#f5deb3" />
-              <rect y="2" width="100" height="2" fill="#f0d9a8" />
-            </pattern>
-          </defs>
-          <rect x="288" y="290" width="505" height="288" fill="url(#woodGrain)" opacity="0.3" />
+          
+          {/* Right basket */}
+          <line x1="820" y1="374" x2="810" y2="374" stroke="#ff6b35" strokeWidth="2" />
+          <line x1="820" y1="394" x2="810" y2="394" stroke="#ff6b35" strokeWidth="2" />
+          <ellipse cx="805" cy="384" rx="8" ry="6" fill="none" stroke="#ff6b35" strokeWidth="2" />
+          
+          {/* Hash marks on free throw lanes */}
+          {[0, 1, 2, 3].map((i) => (
+            <g key={`hash-${i}`}>
+              {/* Left side */}
+              <line x1="355" y1={334 + i * 25} x2="365" y2={334 + i * 25} stroke="#000" strokeWidth="2" />
+              {/* Right side */}
+              <line x1="725" y1={334 + i * 25} x2="715" y2={334 + i * 25} stroke="#000" strokeWidth="2" />
+            </g>
+          ))}
+          
+          {/* Court logo at center */}
+          <text
+            x="540"
+            y="384"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="#492779"
+            fillOpacity="0.15"
+            fontSize="48"
+            fontWeight="bold"
+            fontFamily="Arial, sans-serif"
+          >
+            SBU
+          </text>
         </g>
 
         {/* Seating Sections */}

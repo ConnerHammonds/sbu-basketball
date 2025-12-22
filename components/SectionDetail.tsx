@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from "react";
 
 interface Section {
   id: string;
@@ -14,84 +14,117 @@ interface Section {
 interface SectionDetailProps {
   section: Section;
   onBack: () => void;
+  isAdminMode?: boolean;
 }
 
 interface Seat {
-  id: string;
+  id: number;
   row: number;
   seat: number;
   status: 'available' | 'reserved' | 'selected' | 'sold';
 }
 
-export default function SectionDetail({ section, onBack }: SectionDetailProps) {
-  // Generate seats based on section shape
-  const generateSeats = (): Seat[] => {
-    const seats: Seat[] = [];
-    const isVertical = section.height > section.width;
-    const rows = isVertical ? 16 : 8;
-    const seatsPerRow = isVertical ? 8 : 16;
+export default function SectionDetail({ section, onBack, isAdminMode = false }: SectionDetailProps) {
+  const [seats, setSeats] = useState<Seat[]>([]);
+  const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
 
-    for (let row = 1; row <= rows; row++) {
-      for (let seat = 1; seat <= seatsPerRow; seat++) {
-        const rand = Math.random();
-        let status: Seat['status'];
-        if (rand > 0.85) status = 'sold';
-        else if (rand > 0.7) status = 'reserved';
-        else status = 'available';
+  useEffect(() => {
+    const loadSeats = async () => {
+      const res = await fetch(`/api/seats/by-section?section=${section.id}`);
+      const data = await res.json();
 
-        seats.push({
-          id: `section-${section.id}-R${row}-S${seat}`,
-          row,
-          seat,
-          status,
-        });
-      }
-    }
-    return seats;
+      setSeats(
+        data.seats.map((s: any) => ({
+          id: s.id,
+          row: s.row_number,
+          seat: s.seat_number,
+          status: s.status
+        }))
+      );
+    };
+
+    loadSeats();
+  }, [section.id]);
+
+  const handleAdminStatusChange = async (seatId: number, newStatus: string) => {
+    await fetch("/api/seats/update-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ seatId, status: newStatus }),
+    });
+
+    setSeats((prevSeats) =>
+      prevSeats.map((s) =>
+        s.id === seatId ? { ...s, status: newStatus as any } : s
+      )
+    );
   };
 
-  const [seats, setSeats] = useState<Seat[]>(generateSeats());
-  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
-
-  const handleSeatClick = (seatId: string) => {
+  const handleSeatClick = (seatId: number) => {
+    if (isAdminMode) return; // In admin mode, use dropdown instead
+    
     const seat = seats.find((s) => s.id === seatId);
     if (!seat || seat.status === 'sold' || seat.status === 'reserved') return;
 
+    const newStatus = seat.status === 'available' ? 'selected' : 'available';
+
     setSeats((prevSeats) =>
-      prevSeats.map((s) => {
-        if (s.id === seatId) {
-          const newStatus = s.status === 'available' ? 'selected' : 'available';
-          if (newStatus === 'selected') {
-            setSelectedSeats((prev) => [...prev, seatId]);
-          } else {
-            setSelectedSeats((prev) => prev.filter((id) => id !== seatId));
-          }
-          return { ...s, status: newStatus };
-        }
-        return s;
-      })
+      prevSeats.map((s) =>
+        s.id === seatId ? { ...s, status: newStatus } : s
+      )
+    );
+
+    setSelectedSeats((prev) =>
+      newStatus === 'selected'
+        ? prev.includes(seatId) ? prev : [...prev, seatId]
+        : prev.filter((id) => id !== seatId)
     );
   };
 
   const getSeatColor = (status: string) => {
     switch (status) {
       case 'available':
-        return '#d9d9d9'; // light gray
+        return '#d9d9d9';
       case 'reserved':
-        return '#fbbf24'; // yellow
+        return '#fbbf24';
       case 'selected':
-        return '#10b981'; // green
+        return '#10b981';
       case 'sold':
-        return '#ef4444'; // red
+        return '#ef4444';
       default:
         return '#d9d9d9';
     }
+  };
+
+  const handleConfirmSelection = async () => {
+    if (selectedSeats.length === 0) return;
+
+    // Update seats to reserved status in the database
+    await fetch("/api/seats/reserve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        seatIds: selectedSeats
+      }),
+    });
+
+    // Update local state to show seats as reserved (yellow)
+    setSeats((prevSeats) =>
+      prevSeats.map((s) =>
+        selectedSeats.includes(s.id) ? { ...s, status: 'reserved' } : s
+      )
+    );
+
+    setSelectedSeats([]);
   };
 
   const isVertical = section.height > section.width;
   const rows = isVertical ? 16 : 8;
   const seatsPerRow = isVertical ? 8 : 16;
 
+  // ----------------------------
+  //           RETURN UI
+  // ----------------------------
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
       {/* Back Button */}
@@ -114,10 +147,10 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
 
           {/* Seat grid */}
           <div className="flex justify-center">
-            <div className="inline-block bg-purple-600 rounded-xl p-8">
+            <div className="inline-block bg-purple-600 rounded-xl p-8 relative">
               {Array.from({ length: rows }, (_, rowIndex) => (
-                <div key={`row-${rowIndex}`} className="flex items-center gap-1 mb-1">
-                  <div className="flex gap-1">
+                <div key={`row-${section.id}-${rowIndex}`} className="flex items-center gap-1 mb-1 relative z-0">
+                  <div className="flex gap-1 relative">
                     {Array.from({ length: seatsPerRow }, (_, seatIndex) => {
                       const seat = seats.find(
                         (s) => s.row === rowIndex + 1 && s.seat === seatIndex + 1
@@ -125,9 +158,37 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
                       const isAvailable = seat?.status === 'available';
                       const textColor = isAvailable ? '#1f2937' : '#ffffff';
 
+                      if (isAdminMode && seat) {
+                        return (
+                          <div key={`seat-${section.id}-${rowIndex}-${seatIndex}`} className="relative group hover:z-[9999]">
+                            <button
+                              className="w-9 h-9 rounded"
+                              style={{
+                                backgroundColor: getSeatColor(seat.status),
+                              }}
+                              title={`Row ${String.fromCharCode(65 + rowIndex)}, Seat ${seatIndex + 1}`}
+                            >
+                              <span className="text-[10px] font-bold" style={{ color: textColor }}>
+                                {seatIndex + 1}
+                              </span>
+                            </button>
+                            <select
+                              value={seat.status}
+                              onChange={(e) => handleAdminStatusChange(seat.id, e.target.value)}
+                              className="absolute top-0 left-0 w-28 h-10 opacity-0 group-hover:opacity-100 cursor-pointer text-sm bg-white border-2 border-purple-500 rounded shadow-2xl"
+                              title="Change status"
+                            >
+                              <option value="available">Available</option>
+                              <option value="reserved">Reserved</option>
+                              <option value="sold">Sold</option>
+                            </select>
+                          </div>
+                        );
+                      }
+
                       return (
                         <button
-                          key={`seat-${rowIndex}-${seatIndex}`}
+                          key={`seat-${section.id}-${rowIndex}-${seatIndex}`}
                           onClick={() => seat && handleSeatClick(seat.id)}
                           disabled={seat?.status === 'sold' || seat?.status === 'reserved'}
                           className={`w-9 h-9 rounded transition-all duration-200 ${
@@ -154,7 +215,7 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
         </div>
       </div>
 
-      {/* Legend and Selected Seats */}
+      {/* Legend + Selected */}
       <div className="border-t pt-6">
         <div className="flex justify-center gap-6 mb-6 flex-wrap">
           <div className="flex items-center gap-2">
@@ -175,17 +236,18 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
           </div>
         </div>
 
-        {selectedSeats.length > 0 && (
+        {!isAdminMode && selectedSeats.length > 0 && (
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
             <h3 className="font-semibold text-purple-900 mb-2">
               Selected Seats ({selectedSeats.length})
             </h3>
+
             <div className="flex flex-wrap gap-2">
-              {selectedSeats.map((seatId) => {
+              {selectedSeats.map((seatId, idx) => {
                 const seat = seats.find((s) => s.id === seatId);
                 return (
                   <span
-                    key={seatId}
+                    key={`${seatId}-${idx}`}
                     className="bg-purple-200 text-purple-900 px-3 py-1 rounded text-sm"
                   >
                     Row {seat && String.fromCharCode(64 + seat.row)}, Seat {seat?.seat}
@@ -193,7 +255,16 @@ export default function SectionDetail({ section, onBack }: SectionDetailProps) {
                 );
               })}
             </div>
-            <button className="mt-4 w-full bg-purple-700 hover:bg-purple-800 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+
+            <button
+              onClick={handleConfirmSelection}
+              disabled={selectedSeats.length === 0}
+              className={`mt-4 w-full text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                selectedSeats.length === 0
+                  ? 'bg-purple-300 cursor-not-allowed'
+                  : 'bg-purple-700 hover:bg-purple-800'
+              }`}
+            >
               ✅ Confirm Selection
             </button>
           </div>

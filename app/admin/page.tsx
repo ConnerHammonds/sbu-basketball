@@ -1,13 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
   const [message, setMessage] = useState('');
+  const router = useRouter();
 
   const handleSync = () => {
     setMessage('Data synced successfully!');
     setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleManageSeats = () => {
+    router.push('/?admin=true');
   };
 
   return (
@@ -43,7 +49,10 @@ export default function AdminPage() {
             <p className="text-gray-700 mb-4">
               Update availability or reset seat selections.
             </p>
-            <button className="bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded-lg">
+            <button
+              onClick={handleManageSeats}
+              className="bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded-lg"
+            >
               Go to Seats
             </button>
           </div>
