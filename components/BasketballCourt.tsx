@@ -1,4 +1,4 @@
-/*SVG code copied from figma design file*/
+/*Figma file copied as svg and imported directly*/
 import * as React from "react"
 
 const BasketballCourt = (props: React.SVGProps<SVGSVGElement>) => (

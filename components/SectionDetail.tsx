@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Button from "./Button";
+import ReservationMenu from "./ReservationMenu";
 
 interface Section {
   id: string;
@@ -28,6 +29,7 @@ interface Seat {
 export default function SectionDetail({ section, onBack, isAdminMode = false }: SectionDetailProps) {
   const [seats, setSeats] = useState<Seat[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const loadSeats = async () => {
@@ -97,15 +99,18 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
     }
   };
 
-  const handleConfirmSelection = async () => {
+  const handleConfirmSelection = async (userData: { name: string; email: string; phone: string }) => {
     if (selectedSeats.length === 0) return;
 
-    // Update seats to reserved status in the database
+    // Update seats to reserved status in the database with user info
     await fetch("/api/seats/reserve", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        seatIds: selectedSeats
+        seatIds: selectedSeats,
+        userName: userData.name,
+        userEmail: userData.email,
+        userPhone: userData.phone
       }),
     });
 
@@ -117,6 +122,7 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
     );
 
     setSelectedSeats([]);
+    setIsModalOpen(false);
   };
 
   const isVertical = section.height > section.width;
@@ -259,17 +265,25 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
             </div>
 
             <Button
-              onClick={handleConfirmSelection}
+              onClick={() => setIsModalOpen(true)}
               disabled={selectedSeats.length === 0}
               variant="primary"
               size="lg"
               fullWidth
               className="mt-4"
             >
-              ✅ Confirm Selection
+              ✅ Reserve Seats
             </Button>
           </div>
         )}
+
+        {/* Reservation Menu */}
+        <ReservationMenu
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          selectedSeats={seats.filter(s => selectedSeats.includes(s.id))}
+          onConfirm={handleConfirmSelection}
+        />
       </div>
     </div>
   );
