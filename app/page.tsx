@@ -22,7 +22,7 @@ export default function Home() {
             <Button
               onClick={() => router.push('/login')}
               variant="primary"
-              size="md"
+              size="xl"
             >
               Admin Login
             </Button>
