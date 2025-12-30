@@ -15,23 +15,23 @@ interface Section {
 }
 
 const sections: Section[] = [
-  // Top sections
-  { id: 'A1', name: 'A1', x: 280, y: 100, width: 160, height: 120 },
-  { id: 'A2', name: 'A2', x: 460, y: 100, width: 160, height: 120 },
-  { id: 'A3', name: 'A3', x: 640, y: 100, width: 160, height: 120 },
+  // Top sections - above the court, spanning full court width
+  { id: 'A1', name: 'A1', x: 180, y: 10, width: 300, height: 130 },
+  { id: 'A2', name: 'A2', x: 500, y: 10, width: 300, height: 130 },
+  { id: 'A3', name: 'A3', x: 820, y: 10, width: 300, height: 130 },
   
-  // Left sections
-  { id: 'B1', name: 'B1', x: 120, y: 240, width: 120, height: 144 },
-  { id: 'B2', name: 'B2', x: 120, y: 404, width: 120, height: 144 },
+  // Left sections - left of the court, spanning full court height
+  { id: 'B1', name: 'B1', x: 20, y: 150, width: 150, height: 245 },
+  { id: 'B2', name: 'B2', x: 20, y: 405, width: 150, height: 245 },
   
-  // Right sections
-  { id: 'C1', name: 'C1', x: 840, y: 240, width: 120, height: 144 },
-  { id: 'C2', name: 'C2', x: 840, y: 404, width: 120, height: 144 },
+  // Right sections - right of the court, spanning full court height
+  { id: 'C1', name: 'C1', x: 1130, y: 150, width: 150, height: 245 },
+  { id: 'C2', name: 'C2', x: 1130, y: 405, width: 150, height: 245 },
   
-  // Bottom sections
-  { id: 'D1', name: 'D1', x: 280, y: 548, width: 160, height: 120 },
-  { id: 'D2', name: 'D2', x: 460, y: 548, width: 160, height: 120 },
-  { id: 'D3', name: 'D3', x: 640, y: 548, width: 160, height: 120 },
+  // Bottom sections - below the court, spanning full court width
+  { id: 'D1', name: 'D1', x: 180, y: 660, width: 300, height: 130 },
+  { id: 'D2', name: 'D2', x: 500, y: 660, width: 300, height: 130 },
+  { id: 'D3', name: 'D3', x: 820, y: 660, width: 300, height: 130 },
 ];
 
 interface SeatingChartProps {
@@ -57,15 +57,17 @@ export default function SeatingChart({ isAdminMode = false }: SeatingChartProps)
   return (
     <div className="bg-white rounded-lg shadow-lg p-8">
       <svg
-        viewBox="0 0 1081 768"
+        viewBox="0 0 1300 800"
         className="w-full h-auto"
         style={{ maxHeight: '80vh' }}
       >
         {/* Background - Arena floor */}
-        <rect width="1081" height="768" fill="#e5e7eb" />
+        <rect width="1300" height="800" fill="#e5e7eb" />
 
-        {/* Basketball Court */}
-        <BasketballCourt />
+        {/* Basketball Court - Centered */}
+        <g transform="translate(180, 150)">
+          <BasketballCourt />
+        </g>
 
         {/* Seating Sections */}
         {sections.map((section) => (
