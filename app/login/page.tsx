@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Button from '@/components/Button';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -17,15 +17,15 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/sign-in/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
 
-      if (res.ok) {
+      if (res.ok && data.token) {
         // Redirect to admin seating chart
         router.push('/?admin=true');
       } else {
@@ -47,16 +47,16 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-white mb-2">
-              Username
+            <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+              Email
             </label>
             <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-6 py-4 border-none rounded-lg focus:ring-2 focus:ring-white focus:outline-none text-gray-800"
-              placeholder="Username"
+              placeholder="admin@example.com"
               required
             />
           </div>
