@@ -10,7 +10,7 @@ export default function Home() {
   const isAdminMode = searchParams.get('admin') === 'true';
 
   return (
-    <main className="min-h-screen bg-gray-100 p-8">
+    <main className="min-h-screen p-8" style={{ backgroundColor: '#e5e7eb' }}>
       <div className="max-w-7xl mx-auto">
         {isAdminMode && (
           <div className="bg-purple-700 text-white px-4 py-2 rounded-lg mb-4 text-center font-semibold">

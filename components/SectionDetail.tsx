@@ -64,10 +64,23 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
   };
 
   const handleSeatClick = (seatId: number) => {
-    if (isAdminMode) return; // In admin mode, use dropdown instead
-    
     const seat = seats.find((s) => s.id === seatId);
-    if (!seat || seat.status === 'sold' || seat.status === 'reserved') return;
+    if (!seat) return;
+
+    if (isAdminMode) {
+      // In admin mode, cycle through: available → reserved → sold → available
+      const statusCycle: { [key: string]: string } = {
+        'available': 'reserved',
+        'reserved': 'sold',
+        'sold': 'available'
+      };
+      const newStatus = statusCycle[seat.status] || 'available';
+      handleAdminStatusChange(seatId, newStatus);
+      return;
+    }
+    
+    // Regular user mode
+    if (seat.status === 'sold' || seat.status === 'reserved') return;
 
     const newStatus = seat.status === 'available' ? 'selected' : 'available';
 
@@ -168,29 +181,19 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
 
                       if (isAdminMode && seat) {
                         return (
-                          <div key={`seat-${section.id}-${rowIndex}-${seatIndex}`} className="relative group hover:z-[9999]">
-                            <button
-                              className="w-9 h-9 rounded"
-                              style={{
-                                backgroundColor: getSeatColor(seat.status),
-                              }}
-                              title={`Row ${String.fromCharCode(65 + rowIndex)}, Seat ${seatIndex + 1}`}
-                            >
-                              <span className="text-[10px] font-bold" style={{ color: textColor }}>
-                                {seatIndex + 1}
-                              </span>
-                            </button>
-                            <select
-                              value={seat.status}
-                              onChange={(e) => handleAdminStatusChange(seat.id, e.target.value)}
-                              className="absolute top-0 left-0 w-28 h-10 opacity-0 group-hover:opacity-100 cursor-pointer text-sm bg-white border-2 border-purple-500 rounded shadow-2xl"
-                              title="Change status"
-                            >
-                              <option value="available">Available</option>
-                              <option value="reserved">Reserved</option>
-                              <option value="sold">Sold</option>
-                            </select>
-                          </div>
+                          <button
+                            key={`seat-${section.id}-${rowIndex}-${seatIndex}`}
+                            onClick={() => handleSeatClick(seat.id)}
+                            className="w-9 h-9 rounded cursor-pointer hover:scale-110 hover:shadow-lg transition-all duration-200"
+                            style={{
+                              backgroundColor: getSeatColor(seat.status),
+                            }}
+                            title={`Row ${String.fromCharCode(65 + rowIndex)}, Seat ${seatIndex + 1} - Click to change status`}
+                          >
+                            <span className="text-[10px] font-bold" style={{ color: textColor }}>
+                              {seatIndex + 1}
+                            </span>
+                          </button>
                         );
                       }
 
