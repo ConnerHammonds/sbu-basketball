@@ -1,8 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   --background: #ffffff;
@@ -19,4 +16,58 @@
 body {
   background: var(--background);
   font-family: 'Quantico', Arial, Helvetica, sans-serif;
+}
+
+/* Navbar button styles */
+.nav-link {
+  color: white;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 0.125rem;
+  transition: all 150ms ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.nav-link:hover {
+  background-color: white;
+  color: black;
+}
+
+.nav-button {
+  color: white;
+  padding: 0.625rem;
+  border-radius: 0.125rem;
+  transition: all 150ms ease;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-button:hover {
+  background-color: white;
+  color: black;
+}
+
+/* Section detail zoom animation */
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.section-detail-container {
+  animation: zoomIn 0.3s ease-out;
+  transform-origin: center;
 }
