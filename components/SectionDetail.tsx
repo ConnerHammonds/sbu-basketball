@@ -17,6 +17,7 @@ interface SectionDetailProps {
   section: Section;
   onBack: () => void;
   isAdminMode?: boolean;
+  originPosition?: { x: number; y: number } | null;
 }
 
 interface Seat {
@@ -26,7 +27,7 @@ interface Seat {
   status: 'available' | 'reserved' | 'selected' | 'sold';
 }
 
-export default function SectionDetail({ section, onBack, isAdminMode = false }: SectionDetailProps) {
+export default function SectionDetail({ section, onBack, isAdminMode = false, originPosition }: SectionDetailProps) {
   const [seats, setSeats] = useState<Seat[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -145,8 +146,12 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
   // ----------------------------
   //           RETURN UI
   // ----------------------------
+  const containerStyle = originPosition ? {
+    transformOrigin: `${originPosition.x}% ${originPosition.y}%`
+  } : {};
+
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8">
+    <div className="section-detail-container bg-white rounded-lg shadow-lg p-8" style={containerStyle}>
       {/* Back Button */}
       <div className="mb-6">
         <Button
@@ -168,12 +173,17 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
 
           {/* Seat grid */}
           <div className="flex justify-center">
-            <div className="inline-block bg-purple-600 rounded-xl p-8 relative">
-              {Array.from({ length: rows }, (_, rowIndex) => (
-                <div key={`row-${section.id}-${rowIndex}`} className="flex items-center gap-1 mb-1 relative z-0">
-                  <div className="flex gap-1 relative">
-                    {Array.from({ length: seatsPerRow }, (_, seatIndex) => {
-                      const seat = seats.find(
+            <div className="inline-flex bg-purple-600 rounded-xl p-8 relative">
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: rows }, (_, rowIndex) => (
+                  <div key={`row-${section.id}-${rowIndex}`} className="flex items-center gap-4 relative z-0">
+                    {/* Row Label */}
+                    <span className="text-white font-semibold text-sm w-14 text-right flex-shrink-0">
+                      Row {String.fromCharCode(65 + rowIndex)}
+                    </span>
+                    <div className="flex gap-2 relative">
+                      {Array.from({ length: seatsPerRow }, (_, seatIndex) => {
+                        const seat = seats.find(
                         (s) => s.row === rowIndex + 1 && s.seat === seatIndex + 1
                       );
                       const isAvailable = seat?.status === 'available';
@@ -184,13 +194,13 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
                           <button
                             key={`seat-${section.id}-${rowIndex}-${seatIndex}`}
                             onClick={() => handleSeatClick(seat.id)}
-                            className="w-9 h-9 rounded cursor-pointer hover:scale-110 hover:shadow-lg transition-all duration-200"
+                            className="w-9 h-9 flex-shrink-0 rounded-full cursor-pointer hover:scale-110 hover:shadow-lg transition-all duration-200 flex items-center justify-center"
                             style={{
                               backgroundColor: getSeatColor(seat.status),
                             }}
                             title={`Row ${String.fromCharCode(65 + rowIndex)}, Seat ${seatIndex + 1} - Click to change status`}
                           >
-                            <span className="text-[10px] font-bold" style={{ color: textColor }}>
+                            <span className="text-[10px] font-bold leading-none" style={{ color: textColor }}>
                               {seatIndex + 1}
                             </span>
                           </button>
@@ -202,7 +212,7 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
                           key={`seat-${section.id}-${rowIndex}-${seatIndex}`}
                           onClick={() => seat && handleSeatClick(seat.id)}
                           disabled={seat?.status === 'sold' || seat?.status === 'reserved'}
-                          className={`w-9 h-9 rounded transition-all duration-200 ${
+                          className={`w-9 h-9 flex-shrink-0 rounded-full transition-all duration-200 flex items-center justify-center ${
                             seat?.status === 'sold' || seat?.status === 'reserved'
                               ? 'cursor-not-allowed'
                               : 'cursor-pointer hover:scale-110 hover:shadow-lg'
@@ -212,15 +222,16 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
                           }}
                           title={seat ? `Row ${String.fromCharCode(65 + rowIndex)}, Seat ${seatIndex + 1}` : ''}
                         >
-                          <span className="text-[10px] font-bold" style={{ color: textColor }}>
+                          <span className="text-[10px] font-bold leading-none" style={{ color: textColor }}>
                             {seatIndex + 1}
                           </span>
                         </button>
                       );
                     })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -230,19 +241,19 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
       <div className="border-t pt-6">
         <div className="flex justify-center gap-6 mb-6 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-gray-200 border border-gray-300"></div>
+            <div className="w-6 h-6 rounded-full bg-gray-200 border border-gray-300"></div>
             <span className="text-sm text-gray-700 font-medium">Available</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-yellow-400"></div>
+            <div className="w-6 h-6 rounded-full bg-yellow-400"></div>
             <span className="text-sm text-gray-700 font-medium">Reserved</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-green-500"></div>
+            <div className="w-6 h-6 rounded-full bg-green-500"></div>
             <span className="text-sm text-gray-700 font-medium">Selected</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-red-500"></div>
+            <div className="w-6 h-6 rounded-full bg-red-500"></div>
             <span className="text-sm text-gray-700 font-medium">Unavailable</span>
           </div>
         </div>
@@ -253,7 +264,7 @@ export default function SectionDetail({ section, onBack, isAdminMode = false }: 
               Selected Seats ({selectedSeats.length})
             </h3>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-2">
               {selectedSeats.map((seatId, idx) => {
                 const seat = seats.find((s) => s.id === seatId);
                 return (

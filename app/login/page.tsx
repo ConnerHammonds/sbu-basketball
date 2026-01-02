@@ -67,7 +67,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-[70%] mx-auto block px-4 border-none focus:ring-2 focus:ring-white focus:outline-none text-gray-800 font-quantico"
-                style={{ paddingTop: '10px', paddingBottom: '10px', borderRadius: '8px', fontSize: '16px' }}
+                style={{ paddingTop: '10px', paddingBottom: '10px', borderRadius: '8px', fontSize: '16px', backgroundColor: 'white' }}
                 placeholder="admin@example.com"
                 required
               />
@@ -83,7 +83,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-[70%] mx-auto block px-4 border-none focus:ring-2 focus:ring-white focus:outline-none text-gray-800 font-quantico"
-                style={{ paddingTop: '10px', paddingBottom: '10px', borderRadius: '8px', fontSize: '16px' }}
+                style={{ paddingTop: '10px', paddingBottom: '10px', borderRadius: '8px', fontSize: '16px', backgroundColor: 'white' }}
                 placeholder="Password"
                 required
               />
@@ -101,7 +101,7 @@ export default function LoginPage() {
                 variant="primary"
                 size="lg"
                 isLoading={isLoading}
-                className="w-[25%]"
+                className="w-[30%]"
                 style={{ 
                   paddingTop: '12px', 
                   paddingBottom: '12px',
@@ -109,7 +109,8 @@ export default function LoginPage() {
                   color: 'black',
                   borderColor: '#d1d5db',
                   height: '35px',
-                  fontSize: '16px'
+                  fontSize: '16px',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 Sign In
