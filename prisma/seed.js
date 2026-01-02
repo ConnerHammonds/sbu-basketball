@@ -1,7 +1,29 @@
 const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
+  console.log('=== Starting seed script ===');
+  
+  // Create admin user
+  console.log('Creating admin user...');
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+  const adminPassword = 'admin123';
+  const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
+
+  const user = await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: { password: adminPasswordHash },
+    create: {
+      email: adminEmail,
+      name: 'Admin',
+      password: adminPasswordHash,
+      role: 'admin',
+    },
+  });
+  
+  console.log('✓ Admin user created!');
+  
   // Create sections
   const sections = [
     { id: 'A1', name: 'Section A1', totalSeats: 128, priceTier: 'premium' },
