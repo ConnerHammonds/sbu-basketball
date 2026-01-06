@@ -117,26 +117,34 @@ export default function SectionDetail({ section, onBack, isAdminMode = false, or
     if (selectedSeats.length === 0) return;
 
     // Update seats to reserved status in the database with user info
-    await fetch("/api/seats/reserve", {
+    const response = await fetch("/api/seats/reserve", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         seatIds: selectedSeats,
-        userName: userData.name,
-        userEmail: userData.email,
-        userPhone: userData.phone
+        userData: {
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone
+        }
       }),
     });
 
-    // Update local state to show seats as reserved (yellow)
-    setSeats((prevSeats) =>
-      prevSeats.map((s) =>
-        selectedSeats.includes(s.id) ? { ...s, status: 'reserved' } : s
-      )
-    );
+    if (response.ok) {
+      // Update local state to show seats as reserved (yellow)
+      setSeats((prevSeats) =>
+        prevSeats.map((s) =>
+          selectedSeats.includes(s.id) ? { ...s, status: 'reserved' } : s
+        )
+      );
 
-    setSelectedSeats([]);
-    setIsModalOpen(false);
+      setSelectedSeats([]);
+      setIsModalOpen(false);
+    } else {
+      const error = await response.json();
+      console.error('Reservation failed:', error);
+      alert(`Reservation failed: ${error.error || 'Unknown error'}`);
+    }
   };
 
   const isVertical = section.height > section.width;
