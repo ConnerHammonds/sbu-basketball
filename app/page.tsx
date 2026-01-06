@@ -17,17 +17,6 @@ export default function Home() {
             🔧 Admin Mode - Click seats to change status
           </div>
         )}
-        {!isAdminMode && (
-          <div className="flex justify-end mb-4">
-            <Button
-              onClick={() => router.push('/login')}
-              variant="primary"
-              size="xl"
-            >
-              Admin Login
-            </Button>
-          </div>
-        )}
         <h1 className="text-4xl font-bold text-center mb-2 text-gray-800">
           SBU Basketball Arena
         </h1>

@@ -41,8 +41,16 @@ interface SeatingChartProps {
 export default function SeatingChart({ isAdminMode = false }: SeatingChartProps) {
   const [selectedSection, setSelectedSection] = useState<Section | null>(null);
   const [hoveredSection, setHoveredSection] = useState<string | null>(null);
+  const [clickPosition, setClickPosition] = useState<{ x: number; y: number } | null>(null);
 
-  const handleSectionClick = (section: Section) => {
+  const handleSectionClick = (section: Section, event: React.MouseEvent<SVGElement>) => {
+    const svg = event.currentTarget.ownerSVGElement;
+    if (svg) {
+      const rect = svg.getBoundingClientRect();
+      const clickX = ((event.clientX - rect.left) / rect.width) * 100;
+      const clickY = ((event.clientY - rect.top) / rect.height) * 100;
+      setClickPosition({ x: clickX, y: clickY });
+    }
     setSelectedSection(section);
   };
 
@@ -51,7 +59,7 @@ export default function SeatingChart({ isAdminMode = false }: SeatingChartProps)
   };
 
   if (selectedSection) {
-    return <SectionDetail section={selectedSection} onBack={handleBackToChart} isAdminMode={isAdminMode} />;
+    return <SectionDetail section={selectedSection} onBack={handleBackToChart} isAdminMode={isAdminMode} originPosition={clickPosition} />;
   }
 
   return (
@@ -62,7 +70,7 @@ export default function SeatingChart({ isAdminMode = false }: SeatingChartProps)
         style={{ maxHeight: '80vh' }}
       >
         {/* Background - Arena floor */}
-        <rect width="1300" height="800" fill="#e5e7eb" />
+        <rect width="1300" height="800" fill="#FFFFFF" />
 
         {/* Basketball Court - Centered */}
         <g transform="translate(180, 150)">
@@ -70,25 +78,72 @@ export default function SeatingChart({ isAdminMode = false }: SeatingChartProps)
         </g>
 
         {/* Seating Sections */}
-        {sections.map((section) => (
+        {sections.map((section) => {
+          // Determine border radius based on section position
+          let borderRadius = '0';
+          if (section.id === 'A1') borderRadius = '8 0 0 8'; // Left rounded
+          else if (section.id === 'A3') borderRadius = '0 8 8 0'; // Right rounded
+          else if (section.id === 'D1') borderRadius = '8 0 0 8'; // Left rounded
+          else if (section.id === 'D3') borderRadius = '0 8 8 0'; // Right rounded
+          else if (section.id === 'B1') borderRadius = '8 8 0 0'; // Top rounded
+          else if (section.id === 'B2') borderRadius = '0 0 8 8'; // Bottom rounded
+          else if (section.id === 'C1') borderRadius = '8 8 0 0'; // Top rounded
+          else if (section.id === 'C2') borderRadius = '0 0 8 8'; // Bottom rounded
+
+          return (
           <g key={section.id}>
-            <rect
-              x={section.x}
-              y={section.y}
-              width={section.width}
-              height={section.height}
-              rx="8"
-              fill={hoveredSection === section.id ? '#7c3aed' : '#6b21a8'}
-              stroke={hoveredSection === section.id ? '#fbbf24' : '#4b5563'}
-              strokeWidth={hoveredSection === section.id ? '3' : '2'}
-              className="cursor-pointer transition-all duration-200"
-              onMouseEnter={() => setHoveredSection(section.id)}
-              onMouseLeave={() => setHoveredSection(null)}
-              onClick={() => handleSectionClick(section)}
-              style={{
-                filter: hoveredSection === section.id ? 'brightness(1.2)' : 'none',
-              }}
-            />
+            {borderRadius === '0' ? (
+              <rect
+                x={section.x}
+                y={section.y}
+                width={section.width}
+                height={section.height}
+                fill={hoveredSection === section.id ? '#7c3aed' : '#6b21a8'}
+                stroke={hoveredSection === section.id ? '#fbbf24' : '#4b5563'}
+                strokeWidth={hoveredSection === section.id ? '3' : '2'}
+                className="cursor-pointer transition-all duration-200"
+                onMouseEnter={() => setHoveredSection(section.id)}
+                onMouseLeave={() => setHoveredSection(null)}
+                onClick={(e) => handleSectionClick(section, e)}
+                style={{
+                  filter: hoveredSection === section.id ? 'brightness(1.2)' : 'none',
+                }}
+              />
+            ) : (
+              <path
+                d={(() => {
+                  const x = section.x;
+                  const y = section.y;
+                  const w = section.width;
+                  const h = section.height;
+                  const r = 8;
+                  const [tl, tr, br, bl] = borderRadius.split(' ').map(v => parseInt(v) || 0);
+                  
+                  return `
+                    M ${x + tl} ${y}
+                    L ${x + w - tr} ${y}
+                    ${tr > 0 ? `Q ${x + w} ${y} ${x + w} ${y + tr}` : `L ${x + w} ${y}`}
+                    L ${x + w} ${y + h - br}
+                    ${br > 0 ? `Q ${x + w} ${y + h} ${x + w - br} ${y + h}` : `L ${x + w} ${y + h}`}
+                    L ${x + bl} ${y + h}
+                    ${bl > 0 ? `Q ${x} ${y + h} ${x} ${y + h - bl}` : `L ${x} ${y + h}`}
+                    L ${x} ${y + tl}
+                    ${tl > 0 ? `Q ${x} ${y} ${x + tl} ${y}` : `L ${x} ${y}`}
+                    Z
+                  `;
+                })()}
+                fill={hoveredSection === section.id ? '#7c3aed' : '#6b21a8'}
+                stroke={hoveredSection === section.id ? '#fbbf24' : '#4b5563'}
+                strokeWidth={hoveredSection === section.id ? '3' : '2'}
+                className="cursor-pointer transition-all duration-200"
+                onMouseEnter={() => setHoveredSection(section.id)}
+                onMouseLeave={() => setHoveredSection(null)}
+                onClick={(e) => handleSectionClick(section, e)}
+                style={{
+                  filter: hoveredSection === section.id ? 'brightness(1.2)' : 'none',
+                }}
+              />
+            )}
             {/* Section dividers (gray lines) */}
             {section.id.startsWith('A') && section.id !== 'A3' && (
               <rect
@@ -141,7 +196,8 @@ export default function SeatingChart({ isAdminMode = false }: SeatingChartProps)
               {section.name}
             </text>
           </g>
-        ))}
+          );
+        })}
       </svg>
 
       <div className="mt-6 text-center text-gray-600">
