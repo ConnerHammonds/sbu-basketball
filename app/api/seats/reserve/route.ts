@@ -40,7 +40,36 @@ export async function POST(req: Request) {
       }, { status: 409 });
     }
 
-    // Update all selected seats to reserved status
+    // 1. Create or update customer record
+    const customer = await prisma.customer.upsert({
+      where: { email: userData.email },
+      create: {
+        email: userData.email,
+        name: userData.name,
+        phone: userData.phone || null,
+      },
+      update: {
+        name: userData.name,
+        phone: userData.phone || null,
+      },
+    });
+
+    // 2. Create reservation records for each seat
+    const reservations = await Promise.all(
+      seatIds.map((seatId: number) =>
+        prisma.reservation.create({
+          data: {
+            customerId: customer.id,
+            seatId: seatId,
+            status: 'reserved',
+            reservedAt: new Date(),
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+          },
+        })
+      )
+    );
+
+    // 3. Update all selected seats to reserved status
     await prisma.seat.updateMany({
       where: {
         id: { in: seatIds }

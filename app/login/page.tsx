@@ -26,8 +26,8 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok && data.token) {
-        // Redirect to admin seating chart
-        router.push('/?admin=true');
+        // Redirect to admin dashboard
+        router.push('/admin');
       } else {
         setError(data.error || 'Invalid credentials');
       }

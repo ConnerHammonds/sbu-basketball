@@ -15,7 +15,7 @@ model User {
   name          String?
   email         String    @unique
   emailVerified Boolean   @default(false) @map("email_verified")
-  password      String?
+  password      String?   // Optional - Better Auth uses Account.password
   role          String    @default("user")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
@@ -66,6 +66,33 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model Customer {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String?
+  phone          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  reservations   Reservation[]
+
+  @@map("customers")
+}
+
+model Reservation {
+  id             String   @id @default(cuid())
+  customerId     String   @map("customer_id")
+  seatId         Int      @map("seat_id")
+  status         String   @default("reserved")
+  reservedAt     DateTime @default(now()) @map("reserved_at")
+  expiresAt      DateTime? @map("expires_at")
+  cancelledAt    DateTime? @map("cancelled_at")
+  
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  seat           Seat     @relation(fields: [seatId], references: [id], onDelete: Cascade)
+
+  @@map("reservations")
+}
+
 model Section {
   id         String @id
   name       String
@@ -77,13 +104,14 @@ model Section {
 }
 
 model Seat {
-  id         Int      @id @default(autoincrement())
-  sectionId  String   @map("section_id")
-  rowNumber  Int      @map("row_number")
-  seatNumber Int      @map("seat_number")
-  status     String   @default("available")
+  id            Int           @id @default(autoincrement())
+  sectionId     String        @map("section_id")
+  rowNumber     Int           @map("row_number")
+  seatNumber    Int           @map("seat_number")
+  status        String        @default("available")
+  reservations  Reservation[]
   
-  section    Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  section       Section       @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   
   @@unique([sectionId, rowNumber, seatNumber])
   @@map("seats")
